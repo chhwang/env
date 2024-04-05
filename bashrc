@@ -33,3 +33,15 @@ get-openmpi() {
     rm ${file}
     add-path $(pwd)/openmpi-${version}/bin
 }
+
+# GPU clock frequency
+print-nv-clocks() {
+    nvidia-smi --query-gpu=index,timestamp,power.draw,clocks.sm,clocks.mem,clocks.gr,clocks.max.sm,clocks.max.mem,clocks.max.gr --format=csv
+}
+
+lock-nv-clocks() {
+    for i in $(nvidia-smi --query-gpu=index --format=csv,noheader,nounits); do
+        max_gr=$(nvidia-smi --query-gpu=clocks.max.gr --format=csv,noheader,nounits -i $i)
+        nvidia-smi -lgc $max_gr -i $i
+    done
+}
