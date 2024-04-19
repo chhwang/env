@@ -45,3 +45,35 @@ lock-nv-clocks() {
         nvidia-smi -lgc $max_gr -i $i
     done
 }
+
+# Mount Azure Blob
+mount-az-blob() {
+    echo "Mounting Azure Blob Storage..."
+
+    which blobfuse2 > /dev/null
+    if [ $? -ne 0 ]; then
+        echo "blobfuse2 is not installed. Please install it first. For Ubuntu:"
+        echo ""
+        echo "  $ UBUNTU_VERSION=\"\$(cat /proc/version | sed \"s/.*~//\" | cut -c1-5)\""
+        echo "  $ wget https://packages.microsoft.com/config/ubuntu/\${UBUNTU_VERSION}/packages-microsoft-prod.deb"
+        echo "  $ sudo dpkg -i packages-microsoft-prod.deb"
+        echo "  $ sudo apt-get update"
+        echo "  $ sudo apt-get install blobfuse2"
+        echo ""
+        return
+    fi
+
+    read -p "Account name: " account_name
+    read -p "Container name: " container_name
+    read -s -p "SAS token: " sas_token
+    echo
+    read -p "Mount point: " mount_point
+    read -p "Cache directory: " cache_dir
+    mkdir -p ${mount_point}
+    mkdir -p ${cache_dir}
+
+    export AZURE_STORAGE_ACCOUNT=${account_name}
+    export AZURE_STORAGE_SAS_TOKEN="${sas_token}"
+    echo "blobfuse2 ${mount_point} --tmp-path=${cache_dir} --container-name=${container_name}"
+    blobfuse2 ${mount_point} --tmp-path=${cache_dir} --container-name=${container_name}
+}
